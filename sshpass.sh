@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SSH=/usr/bin/ssh
+SETSID=/usr/bin/setsid
 tmp_file=/tmp/ssh_password
 
 if expr "$*" : ".*password:" >/dev/null
@@ -33,6 +34,7 @@ then
         fi
 
     done
+    $SETSID $SSH ${arg[*]}
+else
+    $SSH $*
 fi
-
-setsid $SSH ${arg[*]}
