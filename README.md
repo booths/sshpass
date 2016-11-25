@@ -9,3 +9,4 @@
 ./sshpass.sh root@127.0.0.1 --password liyunwei
 
 
+test
