@@ -1,8 +1,38 @@
 #!/bin/bash
 
-SSH=/usr/bin/ssh
+ssh_arg=" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
 SETSID=/usr/bin/setsid
 tmp_file=/tmp/ssh_password
+
+function sshpass () {
+    export DISPLAY=:0
+    export SSH_ASKPASS=$(cd `dirname $0`;pwd)/`basename $0`
+
+    if expr "$*" : ".*--password.*" >/dev/null
+    then
+        arg=()
+        is_password=no
+        for i in $*
+        do
+            if [ $is_password == yes ]
+            then
+                echo "$i" >$tmp_file
+                is_password=no
+            else
+                if expr "$i" : "--password" >/dev/null && [ $is_password == no ]
+                then
+                    is_password=yes
+                else
+                    arg[${#arg[*]}]=$i
+                fi
+            fi
+
+        done
+        $SETSID $CMD ${arg[*]}
+    else
+        $CMD $*
+    fi
+}
 
 if expr "$*" : ".*password:" >/dev/null
 then
@@ -12,29 +42,31 @@ then
     exit
 fi
 
-export DISPLAY=:0
-export SSH_ASKPASS=$(cd `dirname $0`;pwd)/`basename $0`
-
-if expr "$*" : ".*--password.*" >/dev/null
+CMD=$1
+if [ "$CMD" == "" ]
 then
-    arg=()
-    is_password=no
-    for i in $* 
-    do
-        if [ $is_password == yes ]
-        then
-            echo "$i" >$tmp_file
-        else
-            if expr "$i" : "--password" >/dev/null && [ $is_password == no ]
-            then
-                is_password=yes
-            else
-                arg[${#arg[*]}]=$i
-            fi
-        fi
+    cat <<EOF
+usage:
+    sshpass <ssh|scp> <options..> [--password PASSWORD]
 
-    done
-    $SETSID $SSH ${arg[*]}
+    PASSWORD: ssh login password
+EOF
 else
-    $SSH $*
+    shift
+    sshpass $*
 fi
+
+#case $1 in
+    #scp|ssh)
+        #CMD
+        #sshpass $*
+        #;;
+    #*)
+        #cat <<EOF
+        #usage:
+        #sshpass <ssh|scp> <options..>
+        #EOF
+        #exit
+        #;;
+#esac
+
