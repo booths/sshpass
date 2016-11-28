@@ -8,7 +8,7 @@
 
 如：
 ./sshpass.sh ssh root@127.0.0.1 --password liyunwei
+
 ./sshpass.sh scp root@127.0.0.1:/tmp/test ./test --password liyunwei
 
 
-test
